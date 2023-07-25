@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Rutoken Demo</string>
+    <string name="no_token">Turn on NFC and tap your device by Rutoken NFC-card.\n
+                            \nor\n
+                            \nTurn on Bluetooth on your device and pair it with Rutoken Bluetooth.\n
+                            \nor
+                            \nConnect Rutoken via USB to your device.</string>
+    <string name="wait_token">Connection with Rutoken (s/n %s) is lost
+                                                \n\nConnect Rutoken or tap your device by Rutoken NFC-card</string>
+    <string name="no_certificate">There are no certificates on Rutoken
+                                  \n\nTo create key pairs and certificates on Rutoken use https://ra.rutoken.ru on your desktop</string>
+    <string name="pin_hint">Input PIN</string>
+    <string name="ok">OK</string>
+    <string name="pin_alert">PIN incorrect, try again</string>
+    <string name="sign">Sign and Send</string>
+    <string name="error">Internal error</string>
+    <string name="done">Operation finished</string>
+    <string name="need_pin_message">You need to input PIN to proceed.</string>
+    <string name="batch_sign_message">%d\u00A0payments will be sent.</string>
+    <string name="batch_require_proceed">Please, confirm operation.</string>
+    <string name="rutoken">Rutoken</string>
+    <string name="token_model" translatable="false">Token model</string>
+    <string name="recipient">Recipient</string>
+    <string name="price">Price</string>
+    <string name="fromDate">from</string>
+    <string name="no_pcsc_message">This application requires Rutoken Control Panel being installed</string>
+    <string name="no_pcsc_title">Rutoken Panel not found</string>
+    <string name="exit">Exit</string>
+    <string name="install_control_panel">Install</string>
+    <string name="need_sm_activate">To continue work with Rutoken Bluetooth you must activate secure channel.
+                                    \n\nTo activate secure channel run Rutoken Control Panel and activate secure channel with Rutoken Bluetooth.</string>
+    <string name="failed_to_add_token">Failed to add token</string>
+    <string name="attach_nfc_card">Hold Rutoken with NFC</string>
+    <string name="hold_nfc_card">Rutoken detected. Please wait while processing…</string>
+    <string name="select">Select</string>
+    <string name="sign_in">Sign in</string>
+    <string name="cancel">Cancel</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="continue_str">Continue</string>
+    <string name="rutoken_not_found">Rutoken not found</string>
+    <string name="privacy_policy">Privacy policy</string>
+</resources>

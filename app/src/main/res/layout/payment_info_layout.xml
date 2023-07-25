@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:weightSum="1">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:id="@+id/scrollView"
+        android:fillViewport="false"
+        android:layout_weight="1">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:id="@+id/dataTV"
+            android:textColor="@android:color/black"
+            android:textSize="17sp" />
+    </ScrollView>
+
+    <Button
+        android:id="@+id/sendB"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:background="@color/rutokenBlue"
+        android:text="@string/sign"
+        android:textColor="@android:color/white"
+        android:visibility="visible" />
+
+</LinearLayout>
