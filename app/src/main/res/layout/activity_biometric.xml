@@ -1,0 +1,23 @@
+<!-- activity_auth_data.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Данные аутентификации"
+        android:textSize="20sp" />
+
+    <!-- Другие элементы пользовательского интерфейса, если есть -->
+
+    <Button
+        android:id="@+id/exitButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Выход"
+        android:textSize="18sp" />
+
+</LinearLayout>

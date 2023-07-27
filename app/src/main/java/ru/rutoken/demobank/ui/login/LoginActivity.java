@@ -15,6 +15,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -24,6 +25,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 
 import ru.rutoken.demobank.R;
+import ru.rutoken.demobank.BiometricActivity;
 import ru.rutoken.demobank.pkcs11caller.Token;
 import ru.rutoken.demobank.pkcs11caller.TokenManager;
 import ru.rutoken.demobank.pkcs11caller.exception.Pkcs11Exception;
@@ -40,7 +42,7 @@ public class LoginActivity extends Pkcs11CallerActivity {
     private static final String SIGN_DATA = "sign me";
 
     // GUI
-    private Button mLoginButton;
+    private Button  mLoginButton;
     private EditText mPinEditText;
     private TextView mAlertTextView;
     private ProgressBar mLoginProgressBar;
@@ -49,6 +51,9 @@ public class LoginActivity extends Pkcs11CallerActivity {
     private String mTokenSerial = TokenManagerListener.NO_TOKEN;
     private String mCertificateFingerprint = TokenManagerListener.NO_FINGERPRINT;
     private Token mToken = null;
+
+    private CheckBox mCheckBox ;
+
 
     @Override
     public String getActivityClassIdentifier() {
@@ -68,12 +73,12 @@ public class LoginActivity extends Pkcs11CallerActivity {
     }
 
     @Override
-    protected void manageTokenOperationError(@Nullable Pkcs11Exception exception) {
+   protected void manageTokenOperationError(@Nullable Pkcs11Exception exception) {
         mToken.clearPin();
         String message = (exception == null) ? getString(R.string.error)
                 : Pkcs11ErrorTranslator.getInstance(this).messageForRV(exception.getErrorCode());
 
-        mAlertTextView.setText(message);
+         mAlertTextView.setText(message);
         showLogonFinished();
     }
 
@@ -85,10 +90,13 @@ public class LoginActivity extends Pkcs11CallerActivity {
     @Override
     protected void manageTokenOperationSucceed() {
         showLogonFinished();
-
-        startActivity(new Intent(LoginActivity.this, PaymentsActivity.class)
-                .putExtra(MainActivity.EXTRA_TOKEN_SERIAL, mTokenSerial)
-                .putExtra(MainActivity.EXTRA_CERTIFICATE_FINGERPRINT, mCertificateFingerprint));
+        if (mCheckBox.isChecked()) {
+            startActivity(new Intent(LoginActivity.this, BiometricActivity.class));
+        }else {
+            startActivity(new Intent(LoginActivity.this, PaymentsActivity.class)
+                    .putExtra(MainActivity.EXTRA_TOKEN_SERIAL, mTokenSerial)
+                    .putExtra(MainActivity.EXTRA_CERTIFICATE_FINGERPRINT, mCertificateFingerprint));
+        }
     }
 
     @Override
@@ -98,21 +106,22 @@ public class LoginActivity extends Pkcs11CallerActivity {
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
 
-        Intent intent = getIntent();
-        mTokenSerial = intent.getStringExtra(MainActivity.EXTRA_TOKEN_SERIAL);
-        mCertificateFingerprint = intent.getStringExtra(MainActivity.EXTRA_CERTIFICATE_FINGERPRINT);
-        mToken = TokenManager.getInstance().getTokenBySerial(mTokenSerial);
-        if (mToken == null) {
-            Toast.makeText(this, R.string.rutoken_not_found, Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
+            Intent intent = getIntent();
+            mTokenSerial = intent.getStringExtra(MainActivity.EXTRA_TOKEN_SERIAL);
+            mCertificateFingerprint = intent.getStringExtra(MainActivity.EXTRA_CERTIFICATE_FINGERPRINT);
+            mToken = TokenManager.getInstance().getTokenBySerial(mTokenSerial);
+            if (mToken == null) {
+                Toast.makeText(this, R.string.rutoken_not_found, Toast.LENGTH_SHORT).show();
+                finish();
+                return;
+            }
 
         mOverlayDialog = new Dialog(this, android.R.style.Theme_Panel);
         mOverlayDialog.setCancelable(false);
 
         setupActionBar();
         setupUI();
+
     }
 
     private void setupActionBar() {
@@ -140,6 +149,7 @@ public class LoginActivity extends Pkcs11CallerActivity {
         mLoginProgressBar.setVisibility(View.GONE);
 
         mLoginButton.setEnabled(false);
+        mCheckBox = findViewById(R.id.checkBox);
 
         mPinEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -171,6 +181,7 @@ public class LoginActivity extends Pkcs11CallerActivity {
 
             // Certificate and sign data are used for a challenge-response authentication.
             login(mToken, mPinEditText.getText().toString(), mCertificateFingerprint, SIGN_DATA.getBytes());
+
         });
     }
 }
