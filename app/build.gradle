@@ -50,6 +50,10 @@ dependencies {
     implementation 'net.java.dev.jna:jna:5.7.0@aar'
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.61'
     implementation 'ru.rutoken:pkcs11jna:4.0.0@jar'
+
+    // add library
+    implementation 'androidx.biometric:biometric:1.0.1'
+
 }
 
 def requireFileInDirectory(String directory, String file) {

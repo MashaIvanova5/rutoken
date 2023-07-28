@@ -1,30 +1,92 @@
 package ru.rutoken.demobank;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.biometric.BiometricPrompt;
+import androidx.core.content.ContextCompat;
 
-import android.os.Bundle;
-
-import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
 
-import ru.rutoken.demobank.R;
+import java.util.concurrent.Executor;
 
-public class BiometricActivity extends Activity {
+public class BiometricActivity extends AppCompatActivity {
+
+    //UI Views
+    private TextView authStatusTv;
+    private Button authBtn;
+
+    private Executor executor;
+    private BiometricPrompt biometricPrompt;
+    private BiometricPrompt.PromptInfo promptInfo;
+    private Button exitBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_biometric);
 
-        // Установка обработчика нажатия на кнопку "Выход"
-        Button exitButton = findViewById(R.id.exitButton);
-        exitButton.setOnClickListener(new View.OnClickListener() {
+        //init UI views
+        authStatusTv = findViewById(R.id.authStatusTv);
+        authBtn = findViewById(R.id.authBtn);
+        exitBtn = findViewById(R.id.exitBtn);
+        //init bio metric
+
+        executor = ContextCompat.getMainExecutor(this);
+        biometricPrompt = new BiometricPrompt(BiometricActivity.this, executor, new BiometricPrompt.AuthenticationCallback() {
+            @Override
+            public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
+                super.onAuthenticationError(errorCode, errString);
+                //error authenticating, stop tasks that requires auth
+                authStatusTv.setText("Authentication error: " + errString);
+                Toast.makeText(BiometricActivity.this, "Authentication error: " + errString, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
+                super.onAuthenticationSucceeded(result);
+                //authentication succeed, continue tasts that requires auth
+                authStatusTv.setText("Authentication succeed...!");
+                Toast.makeText(BiometricActivity.this, "Authentication succeed...!", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onAuthenticationFailed() {
+                super.onAuthenticationFailed();
+                //failed authenticating, stop tasks that requires auth
+                authStatusTv.setText("Authentication failed...!");
+                Toast.makeText(BiometricActivity.this, "Authentication failed...!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        //setup title,description on auth dialog
+        promptInfo = new BiometricPrompt.PromptInfo.Builder()
+                .setTitle("Biometric Authentication")
+                .setSubtitle("Login using fingerprint authentication")
+                .setNegativeButtonText("User App Password")
+                .build();
+
+        //handle authBtn click, start authentication
+        authBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //show auth dialog
+                biometricPrompt.authenticate(promptInfo);
+            }
+        });
+        exitBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();
             }
         });
     }
+
 }
+
+
+
+

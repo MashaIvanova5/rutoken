@@ -1,23 +1,54 @@
 <!-- activity_auth_data.xml -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
     android:orientation="vertical">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Данные аутентификации"
-        android:textSize="20sp" />
-
     <!-- Другие элементы пользовательского интерфейса, если есть -->
 
-    <Button
-        android:id="@+id/exitButton"
+
+    <ImageView
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:src="@drawable/biometric"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"/>
+
+    <TextView
+        android:id="@+id/authStatusTv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Выход"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:text="Сканирование биометрических данных"
+        android:textColor="#000"
+        android:textSize="26sp" />
+
+    <Button
+        android:id="@+id/exitBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/authStatusTv"
+        android:layout_margin="100dp"
+        android:layout_centerHorizontal="true"
+        android:background="@android:color/transparent"
+        android:textColor="@color/ic_launcher_background"
+        android:text="Отмена"
         android:textSize="18sp" />
 
-</LinearLayout>
+    <Button
+        android:id="@+id/authBtn"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/authStatusTv"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:drawableStart="@drawable/ic_fingerprint_white"
+        android:drawablePadding="13dp"
+        android:text="Авторизация"
+        android:textSize="18sp" />
+
+</RelativeLayout>
