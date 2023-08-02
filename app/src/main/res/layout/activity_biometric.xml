@@ -48,7 +48,7 @@
         android:layout_marginTop="30dp"
         android:drawableStart="@drawable/ic_fingerprint_white"
         android:drawablePadding="13dp"
-        android:text="Авторизация"
+        android:text="Добавить"
         android:textSize="18sp" />
 
 </RelativeLayout>

@@ -7,6 +7,7 @@ package ru.rutoken.demobank.ui.login;
 
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.text.Editable;
@@ -21,8 +22,13 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
+import androidx.biometric.BiometricPrompt;
+import androidx.core.content.ContextCompat;
+
+import java.util.concurrent.Executor;
 
 import ru.rutoken.demobank.R;
 import ru.rutoken.demobank.BiometricActivity;
@@ -53,6 +59,12 @@ public class LoginActivity extends Pkcs11CallerActivity {
     private Token mToken = null;
 
     private CheckBox mCheckBox ;
+    private SharedPreferences sharedPreferences;
+    private static final String PREF_FIRST_BIOMETRIC_USE = "first_biometric_use";
+    private Executor executor;
+    private BiometricPrompt biometricPrompt;
+    private BiometricPrompt.PromptInfo promptInfo;
+
 
 
     @Override
@@ -91,20 +103,62 @@ public class LoginActivity extends Pkcs11CallerActivity {
     protected void manageTokenOperationSucceed() {
         showLogonFinished();
         if (mCheckBox.isChecked()) {
-            startActivity(new Intent(LoginActivity.this, BiometricActivity.class));
+            startActivity(new Intent(LoginActivity.this, BiometricActivity.class)
+                    .putExtra("savedPassword" , mPinEditText.getText().toString())
+                    .putExtra(MainActivity.EXTRA_TOKEN_SERIAL, mTokenSerial)
+                    .putExtra(MainActivity.EXTRA_CERTIFICATE_FINGERPRINT, mCertificateFingerprint));
         }else {
             startActivity(new Intent(LoginActivity.this, PaymentsActivity.class)
                     .putExtra(MainActivity.EXTRA_TOKEN_SERIAL, mTokenSerial)
                     .putExtra(MainActivity.EXTRA_CERTIFICATE_FINGERPRINT, mCertificateFingerprint));
         }
     }
+    private void authenticateWithFingerprint() { executor = ContextCompat.getMainExecutor(this);
+        biometricPrompt = new BiometricPrompt(LoginActivity.this, executor, new BiometricPrompt.AuthenticationCallback() {
+            @Override
+            public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
+                super.onAuthenticationError(errorCode, errString);
+                //error authenticating, stop tasks that requires auth
+                Toast.makeText(LoginActivity.this, "Authentication error: " + errString, Toast.LENGTH_SHORT).show();
+            }
 
+            @Override
+            public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
+                super.onAuthenticationSucceeded(result);
+                //authentication succeed, continue tasts that requires auth
+                String savedPassword = getIntent().getStringExtra("savedPassword");
+                Toast.makeText(LoginActivity.this, "Authentication succeed...!"+ savedPassword, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onAuthenticationFailed() {
+                super.onAuthenticationFailed();
+                //failed authenticating, stop tasks that requires auth
+                Toast.makeText(LoginActivity.this, "Authentication failed...!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        //setup title,description on auth dialog
+        promptInfo = new BiometricPrompt.PromptInfo.Builder()
+                .setTitle("Biometric Authentication")
+                .setSubtitle("Login using fingerprint authentication")
+                .setNegativeButtonText("User App Password")
+                .build();
+        biometricPrompt.authenticate(promptInfo); }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
+        sharedPreferences = getSharedPreferences("my_prefs", MODE_PRIVATE);
+
+        boolean isFirstBiometricUse = sharedPreferences.getBoolean(PREF_FIRST_BIOMETRIC_USE, true);
+        if (!isFirstBiometricUse) {
+            authenticateWithFingerprint();
+        }
+
 
             Intent intent = getIntent();
             mTokenSerial = intent.getStringExtra(MainActivity.EXTRA_TOKEN_SERIAL);
@@ -178,7 +232,6 @@ public class LoginActivity extends Pkcs11CallerActivity {
         mLoginButton.setOnClickListener(view -> {
             TokenManagerListener.getInstance(this).resetWaitForToken();
             showLogonStarted();
-
             // Certificate and sign data are used for a challenge-response authentication.
             login(mToken, mPinEditText.getText().toString(), mCertificateFingerprint, SIGN_DATA.getBytes());
 

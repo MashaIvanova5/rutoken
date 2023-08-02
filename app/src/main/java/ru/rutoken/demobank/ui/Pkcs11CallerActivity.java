@@ -59,5 +59,6 @@ abstract public class Pkcs11CallerActivity extends ManagedActivity {
                 return;
             manageTokenOperationSucceed();
         }
+
     }
 }
