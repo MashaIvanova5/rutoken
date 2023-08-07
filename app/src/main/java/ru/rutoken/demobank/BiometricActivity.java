@@ -31,6 +31,8 @@ import ru.rutoken.demobank.ui.payment.PaymentsActivity;
 import ru.rutoken.demobank.ui.TokenManagerListener;
 import ru.rutoken.demobank.utils.Pkcs11ErrorTranslator;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+
 import ru.rutoken.demobank.KeyUtils;
 
 
@@ -127,7 +129,6 @@ public class BiometricActivity extends LoginActivity {
                 super.onAuthenticationSucceeded(result);
                     isAuthenticationSucceeded = true;
                 boolean keyGenerated = KeyUtils.generateBiometricKey(BiometricActivity.this);
-                //boolean keyGenerated = KeyUtils.generateBiometricKey(this);
                 if (keyGenerated) {
 
                     // Получаем ключ из Android Keystore
@@ -140,12 +141,13 @@ public class BiometricActivity extends LoginActivity {
                             encryptedPasswordString = Base64.encodeToString(encryptedPassword, Base64.DEFAULT);
                             // Расшифровываем пароль
                             // decryptedPassword = KeyUtils.decryptData(encryptedPassword, biometricKey);
-
+                            Toast.makeText(BiometricActivity.this, savedPassword +"Зашифрованный пароль: " + encryptedPasswordString + "  Расшифрованный пароль" + decryptedPassword, Toast.LENGTH_SHORT).show();
                         } catch (Exception e) {
+                            Toast.makeText(BiometricActivity.this, "Ошибка", Toast.LENGTH_SHORT).show();
                             e.printStackTrace();
                         }
                     }
-                    Toast.makeText(BiometricActivity.this, savedPassword +"Зашифрованный пароль: " + encryptedPasswordString + "  Расшифрованный пароль" + decryptedPassword, Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(BiometricActivity.this, savedPassword +"Зашифрованный пароль: " + encryptedPasswordString + "  Расшифрованный пароль" + decryptedPassword, Toast.LENGTH_SHORT).show();
                 } else {
                 }
                     authStatusTv.setText("Authentication succeed...!");

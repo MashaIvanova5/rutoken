@@ -140,17 +140,23 @@ public class LoginActivity extends Pkcs11CallerActivity {
             @Override
             public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
                 super.onAuthenticationSucceeded(result);
-                //authentication succeed, continue tasts that requires auth
-                String decryptedPassword = null;
                 byte[] encryptedPassword = getStoredEncryptedPassword();
-                // Расшифровываем пароль
-                biometricKey = KeyUtils.getBiometricKey();
+                // Пробуем расшифровать и вывести полученный encryptedPassword
+                biometricKey = KeyUtils.getBiometricKey();  // еще раз инициализируем biometricKey (выше он уже создан)
+                String decryptedPassword = null;
+                // try-catch обязателен для методов encryptData и decryptData
                 try {
-                    decryptedPassword = decryptData(encryptedPassword, biometricKey);
-                }  catch (Exception e) {
+                    decryptedPassword = KeyUtils.decryptData(encryptedPassword, biometricKey);
+                } catch (Exception e) {
+                    // Выведем ошибка логин при ошибке расшифрования encryptedPassword
+                    // Возможно ошибка ловиться всегда, так что это не обязательно
+                    Toast.makeText(LoginActivity.this, "Ошибка логин", Toast.LENGTH_SHORT).show();
                     e.printStackTrace();
+
                 }
-                Toast.makeText(LoginActivity.this, "Расшифрованный пароль: " + "  " + decryptedPassword, Toast.LENGTH_SHORT).show();
+                Toast.makeText(LoginActivity.this, "Зашифрованный пароль fffff: " + Base64.encodeToString(encryptedPassword, Base64.DEFAULT) + "Расшифрованный  пароль fffff: " + decryptedPassword, Toast.LENGTH_SHORT).show();
+
+
                 Toast.makeText(LoginActivity.this, "Authentication succeed...!", Toast.LENGTH_SHORT).show();
             }
 
@@ -175,20 +181,19 @@ public class LoginActivity extends Pkcs11CallerActivity {
         setContentView(R.layout.activity_login);
 
         byte[] encryptedPassword = getStoredEncryptedPassword();
-        if (encryptedPassword!=null) {
+        if (encryptedPassword != null) {
             authenticateWithFingerprint();
         }
 
-
-            Intent intent = getIntent();
-            mTokenSerial = intent.getStringExtra(MainActivity.EXTRA_TOKEN_SERIAL);
-            mCertificateFingerprint = intent.getStringExtra(MainActivity.EXTRA_CERTIFICATE_FINGERPRINT);
-            mToken = TokenManager.getInstance().getTokenBySerial(mTokenSerial);
-            if (mToken == null) {
-                Toast.makeText(this, R.string.rutoken_not_found, Toast.LENGTH_SHORT).show();
-                finish();
-                return;
-            }
+        Intent intent = getIntent();
+        mTokenSerial = intent.getStringExtra(MainActivity.EXTRA_TOKEN_SERIAL);
+        mCertificateFingerprint = intent.getStringExtra(MainActivity.EXTRA_CERTIFICATE_FINGERPRINT);
+        mToken = TokenManager.getInstance().getTokenBySerial(mTokenSerial);
+        if (mToken == null) {
+            Toast.makeText(this, R.string.rutoken_not_found, Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
 
         mOverlayDialog = new Dialog(this, android.R.style.Theme_Panel);
         mOverlayDialog.setCancelable(false);
