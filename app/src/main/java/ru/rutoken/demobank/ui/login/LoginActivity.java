@@ -5,6 +5,8 @@
 
 package ru.rutoken.demobank.ui.login;
 
+import static ru.rutoken.demobank.KeyUtils.decryptData;
+
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -12,6 +14,7 @@ import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Base64;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,6 +33,9 @@ import androidx.core.content.ContextCompat;
 
 import java.util.concurrent.Executor;
 
+import javax.crypto.SecretKey;
+
+import ru.rutoken.demobank.KeyUtils;
 import ru.rutoken.demobank.R;
 import ru.rutoken.demobank.BiometricActivity;
 import ru.rutoken.demobank.pkcs11caller.Token;
@@ -40,6 +46,7 @@ import ru.rutoken.demobank.ui.TokenManagerListener;
 import ru.rutoken.demobank.ui.main.MainActivity;
 import ru.rutoken.demobank.ui.payment.PaymentsActivity;
 import ru.rutoken.demobank.utils.Pkcs11ErrorTranslator;
+import ru.rutoken.demobank.BiometricActivity;
 
 public class LoginActivity extends Pkcs11CallerActivity {
     /**
@@ -57,10 +64,12 @@ public class LoginActivity extends Pkcs11CallerActivity {
     private String mTokenSerial = TokenManagerListener.NO_TOKEN;
     private String mCertificateFingerprint = TokenManagerListener.NO_FINGERPRINT;
     private Token mToken = null;
+    private SecretKey biometricKey;
 
     private CheckBox mCheckBox ;
     private SharedPreferences sharedPreferences;
     private static final String PREF_FIRST_BIOMETRIC_USE = "first_biometric_use";
+    private static final String ENCRYPTED_PASSWORD_KEY = "ENCRYPTED_PASSWORD_KEY";
     private Executor executor;
     private BiometricPrompt biometricPrompt;
     private BiometricPrompt.PromptInfo promptInfo;
@@ -113,7 +122,13 @@ public class LoginActivity extends Pkcs11CallerActivity {
                     .putExtra(MainActivity.EXTRA_CERTIFICATE_FINGERPRINT, mCertificateFingerprint));
         }
     }
-    private void authenticateWithFingerprint() { executor = ContextCompat.getMainExecutor(this);
+    private byte[] getStoredEncryptedPassword() {
+        SharedPreferences preferences = getSharedPreferences("YourPrefs", MODE_PRIVATE);
+        String encryptedPasswordString = preferences.getString(ENCRYPTED_PASSWORD_KEY, null);
+        return Base64.decode(encryptedPasswordString, Base64.DEFAULT);
+    }
+
+    protected void authenticateWithFingerprint() { executor = ContextCompat.getMainExecutor(this);
         biometricPrompt = new BiometricPrompt(LoginActivity.this, executor, new BiometricPrompt.AuthenticationCallback() {
             @Override
             public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
@@ -126,8 +141,17 @@ public class LoginActivity extends Pkcs11CallerActivity {
             public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
                 super.onAuthenticationSucceeded(result);
                 //authentication succeed, continue tasts that requires auth
-                String savedPassword = getIntent().getStringExtra("savedPassword");
-                Toast.makeText(LoginActivity.this, "Authentication succeed...!"+ savedPassword, Toast.LENGTH_SHORT).show();
+                String decryptedPassword = null;
+                byte[] encryptedPassword = getStoredEncryptedPassword();
+                // Расшифровываем пароль
+                biometricKey = KeyUtils.getBiometricKey();
+                try {
+                    decryptedPassword = decryptData(encryptedPassword, biometricKey);
+                }  catch (Exception e) {
+                    e.printStackTrace();
+                }
+                Toast.makeText(LoginActivity.this, "Расшифрованный пароль: " + "  " + decryptedPassword, Toast.LENGTH_SHORT).show();
+                Toast.makeText(LoginActivity.this, "Authentication succeed...!", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -150,12 +174,8 @@ public class LoginActivity extends Pkcs11CallerActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
-        sharedPreferences = getSharedPreferences("my_prefs", MODE_PRIVATE);
-
-        boolean isFirstBiometricUse = sharedPreferences.getBoolean(PREF_FIRST_BIOMETRIC_USE, true);
-        if (!isFirstBiometricUse) {
+        byte[] encryptedPassword = getStoredEncryptedPassword();
+        if (encryptedPassword!=null) {
             authenticateWithFingerprint();
         }
 

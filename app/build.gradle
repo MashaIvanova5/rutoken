@@ -4,7 +4,7 @@ android {
     compileSdkVersion 31
     ndkVersion "21.0.6113669"
     defaultConfig {
-        minSdkVersion 21
+        minSdkVersion 24
         targetSdkVersion 31
         versionName "1.5.0"
         versionCode 18
