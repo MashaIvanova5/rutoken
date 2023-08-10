@@ -73,8 +73,6 @@ public class KeyUtils {
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
         cipher.init(Cipher.ENCRYPT_MODE, key);
         byte[] encryptedData = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
-        // Чтобы декриптовать данные позже, вам понадобится IV.
-        // Обычный способ это сделать - добавить IV к зашифрованным данным.
         byte[] iv = cipher.getIV();
         byte[] combined = new byte[iv.length + encryptedData.length];
         System.arraycopy(iv, 0, combined, 0, iv.length);
