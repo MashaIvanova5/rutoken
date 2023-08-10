@@ -55,7 +55,7 @@ public class LoginActivity extends Pkcs11CallerActivity {
     private static final String SIGN_DATA = "sign me";
 
     // GUI
-    private Button  mLoginButton;
+    private Button mLoginButton;
     private EditText mPinEditText;
     private TextView mAlertTextView;
     private ProgressBar mLoginProgressBar;
@@ -66,14 +66,13 @@ public class LoginActivity extends Pkcs11CallerActivity {
     private Token mToken = null;
     private SecretKey biometricKey;
 
-    private CheckBox mCheckBox ;
+    private CheckBox mCheckBox;
     private SharedPreferences sharedPreferences;
     private static final String PREF_FIRST_BIOMETRIC_USE = "first_biometric_use";
     private static final String ENCRYPTED_PASSWORD_KEY = "ENCRYPTED_PASSWORD_KEY";
     private Executor executor;
     private BiometricPrompt biometricPrompt;
     private BiometricPrompt.PromptInfo promptInfo;
-
 
 
     @Override
@@ -94,12 +93,12 @@ public class LoginActivity extends Pkcs11CallerActivity {
     }
 
     @Override
-   protected void manageTokenOperationError(@Nullable Pkcs11Exception exception) {
+    protected void manageTokenOperationError(@Nullable Pkcs11Exception exception) {
         mToken.clearPin();
         String message = (exception == null) ? getString(R.string.error)
                 : Pkcs11ErrorTranslator.getInstance(this).messageForRV(exception.getErrorCode());
 
-         mAlertTextView.setText(message);
+        mAlertTextView.setText(message);
         showLogonFinished();
     }
 
@@ -113,22 +112,26 @@ public class LoginActivity extends Pkcs11CallerActivity {
         showLogonFinished();
         if (mCheckBox.isChecked()) {
             startActivity(new Intent(LoginActivity.this, BiometricActivity.class)
-                    .putExtra("savedPassword" , mPinEditText.getText().toString())
+                    .putExtra("savedPassword", mPinEditText.getText().toString())
                     .putExtra(MainActivity.EXTRA_TOKEN_SERIAL, mTokenSerial)
                     .putExtra(MainActivity.EXTRA_CERTIFICATE_FINGERPRINT, mCertificateFingerprint));
-        }else {
+        } else {
             startActivity(new Intent(LoginActivity.this, PaymentsActivity.class)
                     .putExtra(MainActivity.EXTRA_TOKEN_SERIAL, mTokenSerial)
                     .putExtra(MainActivity.EXTRA_CERTIFICATE_FINGERPRINT, mCertificateFingerprint));
         }
     }
+
     private byte[] getStoredEncryptedPassword() {
         SharedPreferences preferences = getSharedPreferences("YourPrefs", MODE_PRIVATE);
         String encryptedPasswordString = preferences.getString(ENCRYPTED_PASSWORD_KEY, null);
+        if (encryptedPasswordString == null)
+            return null;
         return Base64.decode(encryptedPasswordString, Base64.DEFAULT);
     }
 
-    protected void authenticateWithFingerprint() { executor = ContextCompat.getMainExecutor(this);
+    protected void authenticateWithFingerprint() {
+        executor = ContextCompat.getMainExecutor(this);
         biometricPrompt = new BiometricPrompt(LoginActivity.this, executor, new BiometricPrompt.AuthenticationCallback() {
             @Override
             public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
@@ -141,23 +144,19 @@ public class LoginActivity extends Pkcs11CallerActivity {
             public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
                 super.onAuthenticationSucceeded(result);
                 byte[] encryptedPassword = getStoredEncryptedPassword();
-                // Пробуем расшифровать и вывести полученный encryptedPassword
-                biometricKey = KeyUtils.getBiometricKey();  // еще раз инициализируем biometricKey (выше он уже создан)
+                biometricKey = KeyUtils.getBiometricKey();
                 String decryptedPassword = null;
                 // try-catch обязателен для методов encryptData и decryptData
-                try {
-                    decryptedPassword = KeyUtils.decryptData(encryptedPassword, biometricKey);
-                } catch (Exception e) {
-                    // Выведем ошибка логин при ошибке расшифрования encryptedPassword
-                    // Возможно ошибка ловиться всегда, так что это не обязательно
-                    Toast.makeText(LoginActivity.this, "Ошибка логин", Toast.LENGTH_SHORT).show();
-                    e.printStackTrace();
+                if (encryptedPassword != null) {
+                    try {
+                        decryptedPassword = KeyUtils.decryptData(encryptedPassword, biometricKey);
+                    } catch (Exception e) {
+                        e.printStackTrace();
 
+                    }
+                    login(mToken, decryptedPassword, mCertificateFingerprint, SIGN_DATA.getBytes());
+                    Toast.makeText(LoginActivity.this, "Authentication succeed...!", Toast.LENGTH_SHORT).show();
                 }
-                Toast.makeText(LoginActivity.this, "Зашифрованный пароль fffff: " + Base64.encodeToString(encryptedPassword, Base64.DEFAULT) + "Расшифрованный  пароль fffff: " + decryptedPassword, Toast.LENGTH_SHORT).show();
-
-
-                Toast.makeText(LoginActivity.this, "Authentication succeed...!", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -174,7 +173,9 @@ public class LoginActivity extends Pkcs11CallerActivity {
                 .setSubtitle("Login using fingerprint authentication")
                 .setNegativeButtonText("User App Password")
                 .build();
-        biometricPrompt.authenticate(promptInfo); }
+        biometricPrompt.authenticate(promptInfo);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

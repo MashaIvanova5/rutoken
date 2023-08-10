@@ -19,6 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.concurrent.Executor;
 
 import ru.rutoken.demobank.pkcs11caller.Token;
@@ -71,6 +72,7 @@ public class BiometricActivity extends LoginActivity {
                 : Pkcs11ErrorTranslator.getInstance(this).messageForRV(exception.getErrorCode());
     }
 
+
     @Override
     protected void manageTokenOperationSucceed() {
         if (isAuthenticationSucceeded) {
@@ -91,6 +93,8 @@ public class BiometricActivity extends LoginActivity {
     public byte[] getStoredEncryptedPassword() {
         SharedPreferences preferences = getSharedPreferences("YourPrefs", MODE_PRIVATE);
         String encryptedPasswordString = preferences.getString(ENCRYPTED_PASSWORD_KEY, null);
+        if (encryptedPasswordString == null)
+            return null;
         return Base64.decode(encryptedPasswordString, Base64.DEFAULT);
     }
 
@@ -124,6 +128,7 @@ public class BiometricActivity extends LoginActivity {
                 Toast.makeText(BiometricActivity.this, "Authentication error: " + errString, Toast.LENGTH_SHORT).show();
             }
 
+
             @Override
             public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
                 super.onAuthenticationSucceeded(result);
@@ -139,11 +144,9 @@ public class BiometricActivity extends LoginActivity {
                             byte[] encryptedPassword = KeyUtils.encryptData(savedPassword, biometricKey);
                             saveEncryptedPassword(encryptedPassword);
                             encryptedPasswordString = Base64.encodeToString(encryptedPassword, Base64.DEFAULT);
-                            // Расшифровываем пароль
-                            // decryptedPassword = KeyUtils.decryptData(encryptedPassword, biometricKey);
-                            Toast.makeText(BiometricActivity.this, savedPassword +"Зашифрованный пароль: " + encryptedPasswordString + "  Расшифрованный пароль" + decryptedPassword, Toast.LENGTH_SHORT).show();
                         } catch (Exception e) {
                             Toast.makeText(BiometricActivity.this, "Ошибка", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(BiometricActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
                             e.printStackTrace();
                         }
                     }

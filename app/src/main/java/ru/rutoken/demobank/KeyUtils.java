@@ -69,80 +69,39 @@ public class KeyUtils {
         }
         return null;
     }
-// первая версия шифрования и дешифрования без iv (зашифровало, но не расшифровало)
-    /*public static byte[] encryptData(String data, SecretKey key) throws Exception {
-        Cipher cipher = Cipher.getInstance(KeyProperties.KEY_ALGORITHM_AES + "/"
-                + KeyProperties.BLOCK_MODE_CBC + "/"
-                + KeyProperties.ENCRYPTION_PADDING_PKCS7);
-        cipher.init(Cipher.ENCRYPT_MODE, key);
-        return cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
-    }
-
-    public static String decryptData(byte[] encryptedData, SecretKey key) throws Exception {
-        Cipher cipher = Cipher.getInstance(KeyProperties.KEY_ALGORITHM_AES + "/"
-                + KeyProperties.BLOCK_MODE_CBC + "/"
-                + KeyProperties.ENCRYPTION_PADDING_PKCS7);
-        cipher.init(Cipher.DECRYPT_MODE, key);
-        byte[] decryptedData = cipher.doFinal(encryptedData);
-        return new String(decryptedData, StandardCharsets.UTF_8);
-    }*/
-
-    // Вариант шифрования и расшифрования с использованием IV на основе закомменченного кода выше
     public static byte[] encryptData(String data, SecretKey key) throws Exception {
-        Cipher cipher = Cipher.getInstance(KeyProperties.KEY_ALGORITHM_AES + "/"
-                + KeyProperties.BLOCK_MODE_CBC + "/"
-                + KeyProperties.ENCRYPTION_PADDING_PKCS7);
-        cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(IV.getBytes()));
-        return cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
-    }
-
-    public static String decryptData(byte[] encryptedData, SecretKey key) throws Exception {
-        Cipher cipher = Cipher.getInstance(KeyProperties.KEY_ALGORITHM_AES + "/"
-                + KeyProperties.BLOCK_MODE_CBC + "/"
-                + KeyProperties.ENCRYPTION_PADDING_PKCS7);
-        cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(IV.getBytes()));
-        byte[] decryptedData = cipher.doFinal(encryptedData);
-        return new String(decryptedData, StandardCharsets.UTF_8);
-    }
-
-    // Функция шифрования данных с использованием заданного ключа и IV
-    /*public static byte[] encryptData(String data, SecretKey key) throws Exception {
-        byte[] iv = generateIV();
-        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS11Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(iv));
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, key);
         byte[] encryptedData = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
+        // Чтобы декриптовать данные позже, вам понадобится IV.
+        // Обычный способ это сделать - добавить IV к зашифрованным данным.
+        byte[] iv = cipher.getIV();
+        byte[] combined = new byte[iv.length + encryptedData.length];
+        System.arraycopy(iv, 0, combined, 0, iv.length);
+        System.arraycopy(encryptedData, 0, combined, iv.length, encryptedData.length);
 
-        // Комбинируем IV и зашифрованные данные в один массив
-        byte[] combinedData = new byte[iv.length + encryptedData.length];
-        System.arraycopy(iv, 0, combinedData, 0, iv.length);
-        System.arraycopy(encryptedData, 0, combinedData, iv.length, encryptedData.length);
-
-        return combinedData;
+        return combined;
     }
 
-    public static String decryptData(byte[] combinedDataString, SecretKey key) throws Exception {
-        // Декодируем комбинированные данные из строки Base64
-        byte[] combinedData = Base64.decode(combinedDataString, Base64.DEFAULT);
+    public static String decryptData(byte[] encryptedDataWithIV, SecretKey key) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
 
-        // Извлекаем IV из комбинированных данных
-        byte[] iv = new byte[16];
-        System.arraycopy(combinedData, 0, iv, 0, iv.length);
+        // Извлекаем IV из данных.
+        int ivSize = cipher.getBlockSize();
+        byte[] iv = new byte[ivSize];
+        System.arraycopy(encryptedDataWithIV, 0, iv, 0, ivSize);
+        IvParameterSpec ivSpec = new IvParameterSpec(iv);
 
-        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
+        // Извлекаем зашифрованные данные, исключая IV.
+        byte[] encryptedData = new byte[encryptedDataWithIV.length - ivSize];
+        System.arraycopy(encryptedDataWithIV, ivSize, encryptedData, 0, encryptedData.length);
 
-        // Дешифруем данные (исключая IV)
-        byte[] encryptedData = new byte[combinedData.length - iv.length];
-        System.arraycopy(combinedData, iv.length, encryptedData, 0, encryptedData.length);
+        cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
         byte[] decryptedData = cipher.doFinal(encryptedData);
+
         return new String(decryptedData, StandardCharsets.UTF_8);
     }
 
-    // Генерация случайного IV длиной 16 байт
-    private static byte[] generateIV() {
-        byte[] iv = new byte[16];
-        SecureRandom random = new SecureRandom();
-        random.nextBytes(iv);
-        return iv;
-    }*/
+
+
 }
