@@ -28,6 +28,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
+import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
 
@@ -201,6 +202,13 @@ public class LoginActivity extends Pkcs11CallerActivity {
 
         setupActionBar();
         setupUI();
+
+        BiometricManager biometricManager = BiometricManager.from(LoginActivity.this);
+        if (biometricManager.canAuthenticate() == BiometricManager.BIOMETRIC_SUCCESS) {
+            mCheckBox.setVisibility(View.VISIBLE);
+        } else {
+            mCheckBox.setVisibility(View.GONE);
+        }
 
     }
 
