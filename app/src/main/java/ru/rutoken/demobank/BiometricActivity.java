@@ -1,26 +1,23 @@
 package ru.rutoken.demobank;
 
 
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.util.Base64;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
 
-
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.os.Bundle;
-import android.os.Handler;
-import android.util.Base64;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
+import java.util.HashMap;
 import java.util.concurrent.Executor;
+
+import javax.crypto.SecretKey;
 
 import ru.rutoken.demobank.pkcs11caller.Token;
 import ru.rutoken.demobank.pkcs11caller.TokenManager;
@@ -29,22 +26,12 @@ import ru.rutoken.demobank.ui.TokenManagerListener;
 import ru.rutoken.demobank.ui.login.LoginActivity;
 import ru.rutoken.demobank.ui.main.MainActivity;
 import ru.rutoken.demobank.ui.payment.PaymentsActivity;
-import ru.rutoken.demobank.ui.TokenManagerListener;
 import ru.rutoken.demobank.utils.Pkcs11ErrorTranslator;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-
-import ru.rutoken.demobank.KeyUtils;
-
-
-
 
 
 public class BiometricActivity extends LoginActivity {
 
     //UI Views
-    private static final String SIGN_DATA = "sign me";
-    private static final String KEY_NAME = "biometric_key";
     private static final String ENCRYPTED_PASSWORD_KEY = "ENCRYPTED_PASSWORD_KEY";
 
     private TextView authStatusTv;
@@ -60,12 +47,13 @@ public class BiometricActivity extends LoginActivity {
     private boolean isAuthenticationSucceeded = false;
     private boolean exit = false;
     String encryptedPasswordString;
-    String decryptedPassword;
+
     private SecretKey biometricKey;
 
     public String getActivityClassIdentifier() {
         return getClass().getName();
     }
+
     protected void manageTokenOperationError(@Nullable Pkcs11Exception exception) {
         mToken.clearPin();
         String message = (exception == null) ? getString(R.string.error)
@@ -81,8 +69,11 @@ public class BiometricActivity extends LoginActivity {
                     .putExtra(MainActivity.EXTRA_CERTIFICATE_FINGERPRINT, mCertificateFingerprint));
             isAuthenticationSucceeded = false;
         }
-        if(exit){ startActivity(new Intent(BiometricActivity.this, LoginActivity.class));}
+        if (exit) {
+            startActivity(new Intent(BiometricActivity.this, LoginActivity.class));
         }
+    }
+
     private void saveEncryptedPassword(byte[] encryptedPassword) {
         SharedPreferences preferences = getSharedPreferences("YourPrefs", MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
@@ -90,16 +81,8 @@ public class BiometricActivity extends LoginActivity {
         editor.apply();
     }
 
-    public byte[] getStoredEncryptedPassword() {
-        SharedPreferences preferences = getSharedPreferences("YourPrefs", MODE_PRIVATE);
-        String encryptedPasswordString = preferences.getString(ENCRYPTED_PASSWORD_KEY, null);
-        if (encryptedPasswordString == null)
-            return null;
-        return Base64.decode(encryptedPasswordString, Base64.DEFAULT);
-    }
 
-
-            @Override
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_biometric);
@@ -113,6 +96,7 @@ public class BiometricActivity extends LoginActivity {
         String savedPassword = getIntent().getStringExtra("savedPassword");
         mTokenSerial = intent.getStringExtra(MainActivity.EXTRA_TOKEN_SERIAL);
         mCertificateFingerprint = intent.getStringExtra(MainActivity.EXTRA_CERTIFICATE_FINGERPRINT);
+        HashMap<String, byte[]> tokenPinMap = (HashMap<String, byte[]>) intent.getSerializableExtra("tokenPinMap");
         mToken = TokenManager.getInstance().getTokenBySerial(mTokenSerial);
 
         //init biometric
@@ -132,7 +116,7 @@ public class BiometricActivity extends LoginActivity {
             @Override
             public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
                 super.onAuthenticationSucceeded(result);
-                    isAuthenticationSucceeded = true;
+                isAuthenticationSucceeded = true;
                 boolean keyGenerated = KeyUtils.generateBiometricKey(BiometricActivity.this);
                 if (keyGenerated) {
 
@@ -143,6 +127,7 @@ public class BiometricActivity extends LoginActivity {
                             // Шифруем пароль с использованием ключа
                             byte[] encryptedPassword = KeyUtils.encryptData(savedPassword, biometricKey);
                             saveEncryptedPassword(encryptedPassword);
+                            tokenPinMap.put(mTokenSerial, encryptedPassword);
                             encryptedPasswordString = Base64.encodeToString(encryptedPassword, Base64.DEFAULT);
                         } catch (Exception e) {
                             Toast.makeText(BiometricActivity.this, "Ошибка", Toast.LENGTH_SHORT).show();
@@ -153,11 +138,9 @@ public class BiometricActivity extends LoginActivity {
                     //Toast.makeText(BiometricActivity.this, savedPassword +"Зашифрованный пароль: " + encryptedPasswordString + "  Расшифрованный пароль" + decryptedPassword, Toast.LENGTH_SHORT).show();
                 } else {
                 }
-                    authStatusTv.setText("Authentication succeed...!");
-                    Toast.makeText(BiometricActivity.this, "Authentication succeed...!", Toast.LENGTH_SHORT).show();
-                    manageTokenOperationSucceed();
-
-
+                authStatusTv.setText("Authentication succeed...!");
+                Toast.makeText(BiometricActivity.this, "Authentication succeed...!", Toast.LENGTH_SHORT).show();
+                manageTokenOperationSucceed();
 
 
             }
@@ -179,25 +162,16 @@ public class BiometricActivity extends LoginActivity {
                 .build();
 
         //handle authBtn click, start authentication
-        authBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //show auth dialog
-                biometricPrompt.authenticate(promptInfo);
-            }
+        authBtn.setOnClickListener(v -> {
+            //show auth dialog
+            biometricPrompt.authenticate(promptInfo);
         });
-        exitBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                exit=true;
-            }
-        });
+        exitBtn.setOnClickListener(v -> exit = true);
 
-            }
+    }
 
 
 }
-
 
 
 

@@ -1,10 +1,9 @@
 package ru.rutoken.demobank;
+
 import android.content.Context;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
-import android.util.Base64;
-import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 
@@ -13,7 +12,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
@@ -21,13 +19,10 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 
 public class KeyUtils {
 
     private static final String KEY_NAME = "biometric_key";
-    private static final String KEY_STORE = "AndroidKeyStore";
-    private static final String IV = "abcdefgh";
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     public static boolean generateBiometricKey(Context context) {
@@ -96,7 +91,6 @@ public class KeyUtils {
 
         cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
         byte[] decryptedData = cipher.doFinal(encryptedData);
-
 
         return new String(decryptedData, StandardCharsets.UTF_8);
     }

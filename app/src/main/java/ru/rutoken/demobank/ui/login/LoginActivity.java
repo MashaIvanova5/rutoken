@@ -5,12 +5,11 @@
 
 package ru.rutoken.demobank.ui.login;
 
-import static ru.rutoken.demobank.KeyUtils.decryptData;
 
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
+
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -32,6 +31,7 @@ import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
 
+import java.util.HashMap;
 import java.util.concurrent.Executor;
 
 import javax.crypto.SecretKey;
@@ -47,7 +47,7 @@ import ru.rutoken.demobank.ui.TokenManagerListener;
 import ru.rutoken.demobank.ui.main.MainActivity;
 import ru.rutoken.demobank.ui.payment.PaymentsActivity;
 import ru.rutoken.demobank.utils.Pkcs11ErrorTranslator;
-import ru.rutoken.demobank.BiometricActivity;
+
 
 public class LoginActivity extends Pkcs11CallerActivity {
     /**
@@ -68,12 +68,13 @@ public class LoginActivity extends Pkcs11CallerActivity {
     private SecretKey biometricKey;
 
     private CheckBox mCheckBox;
-    private SharedPreferences sharedPreferences;
-    private static final String PREF_FIRST_BIOMETRIC_USE = "first_biometric_use";
+
     private static final String ENCRYPTED_PASSWORD_KEY = "ENCRYPTED_PASSWORD_KEY";
     private Executor executor;
     private BiometricPrompt biometricPrompt;
     private BiometricPrompt.PromptInfo promptInfo;
+
+    private static final HashMap<String, byte[]> tokenPinMap = new HashMap<>();
 
 
     @Override
@@ -115,7 +116,9 @@ public class LoginActivity extends Pkcs11CallerActivity {
             startActivity(new Intent(LoginActivity.this, BiometricActivity.class)
                     .putExtra("savedPassword", mPinEditText.getText().toString())
                     .putExtra(MainActivity.EXTRA_TOKEN_SERIAL, mTokenSerial)
-                    .putExtra(MainActivity.EXTRA_CERTIFICATE_FINGERPRINT, mCertificateFingerprint));
+                    .putExtra(MainActivity.EXTRA_CERTIFICATE_FINGERPRINT, mCertificateFingerprint)
+                    .putExtra("tokenPinMap", tokenPinMap)
+            );
         } else {
             startActivity(new Intent(LoginActivity.this, PaymentsActivity.class)
                     .putExtra(MainActivity.EXTRA_TOKEN_SERIAL, mTokenSerial)
