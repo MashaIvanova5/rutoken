@@ -15,6 +15,7 @@ import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 import javax.crypto.SecretKey;
@@ -81,6 +82,21 @@ public class BiometricActivity extends LoginActivity {
         editor.apply();
     }
 
+    private void saveHashMap() {
+        SharedPreferences preferences = getSharedPreferences("SavingHashMap", MODE_PRIVATE);
+        HashMap<String, String> tokenPinMap = new HashMap<>();
+        for (String key : preferences.getAll().keySet()) {
+            tokenPinMap.put(key, preferences.getString(key, null));
+        }
+        tokenPinMap.put(mTokenSerial, encryptedPasswordString);
+        SharedPreferences.Editor editor = preferences.edit();
+        for (Map.Entry<String, String> entry : tokenPinMap.entrySet()) {
+            editor.putString(entry.getKey(), entry.getValue());
+        }
+        editor.apply();
+
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,7 +112,6 @@ public class BiometricActivity extends LoginActivity {
         String savedPassword = getIntent().getStringExtra("savedPassword");
         mTokenSerial = intent.getStringExtra(MainActivity.EXTRA_TOKEN_SERIAL);
         mCertificateFingerprint = intent.getStringExtra(MainActivity.EXTRA_CERTIFICATE_FINGERPRINT);
-        HashMap<String, byte[]> tokenPinMap = (HashMap<String, byte[]>) intent.getSerializableExtra("tokenPinMap");
         mToken = TokenManager.getInstance().getTokenBySerial(mTokenSerial);
 
         //init biometric
@@ -127,7 +142,7 @@ public class BiometricActivity extends LoginActivity {
                             // Шифруем пароль с использованием ключа
                             byte[] encryptedPassword = KeyUtils.encryptData(savedPassword, biometricKey);
                             saveEncryptedPassword(encryptedPassword);
-                            tokenPinMap.put(mTokenSerial, encryptedPassword);
+                            saveHashMap();
                             encryptedPasswordString = Base64.encodeToString(encryptedPassword, Base64.DEFAULT);
                         } catch (Exception e) {
                             Toast.makeText(BiometricActivity.this, "Ошибка", Toast.LENGTH_SHORT).show();

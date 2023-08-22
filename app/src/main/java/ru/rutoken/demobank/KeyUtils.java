@@ -53,6 +53,7 @@ public class KeyUtils {
         }
         return false;
     }
+
     public static SecretKey getBiometricKey() {
         try {
             KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
@@ -64,6 +65,7 @@ public class KeyUtils {
         }
         return null;
     }
+
     public static byte[] encryptData(String data, SecretKey key) throws Exception {
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
         cipher.init(Cipher.ENCRYPT_MODE, key);
@@ -94,7 +96,6 @@ public class KeyUtils {
 
         return new String(decryptedData, StandardCharsets.UTF_8);
     }
-
 
 
 }

@@ -9,7 +9,6 @@ package ru.rutoken.demobank.ui.login;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
-
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -31,14 +30,13 @@ import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
 
-import java.util.HashMap;
 import java.util.concurrent.Executor;
 
 import javax.crypto.SecretKey;
 
+import ru.rutoken.demobank.BiometricActivity;
 import ru.rutoken.demobank.KeyUtils;
 import ru.rutoken.demobank.R;
-import ru.rutoken.demobank.BiometricActivity;
 import ru.rutoken.demobank.pkcs11caller.Token;
 import ru.rutoken.demobank.pkcs11caller.TokenManager;
 import ru.rutoken.demobank.pkcs11caller.exception.Pkcs11Exception;
@@ -73,8 +71,6 @@ public class LoginActivity extends Pkcs11CallerActivity {
     private Executor executor;
     private BiometricPrompt biometricPrompt;
     private BiometricPrompt.PromptInfo promptInfo;
-
-    private static final HashMap<String, byte[]> tokenPinMap = new HashMap<>();
 
 
     @Override
@@ -117,7 +113,6 @@ public class LoginActivity extends Pkcs11CallerActivity {
                     .putExtra("savedPassword", mPinEditText.getText().toString())
                     .putExtra(MainActivity.EXTRA_TOKEN_SERIAL, mTokenSerial)
                     .putExtra(MainActivity.EXTRA_CERTIFICATE_FINGERPRINT, mCertificateFingerprint)
-                    .putExtra("tokenPinMap", tokenPinMap)
             );
         } else {
             startActivity(new Intent(LoginActivity.this, PaymentsActivity.class)
